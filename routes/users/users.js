@@ -2,17 +2,21 @@ const express = require('express');
 const router = express.Router();
 const User = require('./usersModel')
 
+const adminPassword = '123'
+
+//listar usuarios
 router.get('/', async (req, res) => {
-    const response = await User.find()
-    res.json(response)
+    try {
+        const response = await User.find()
+        res.json({message:'success', status:true, body:response})
+        res.end()
+    } catch (error) {
+        res.json({message:'Ocurrio un error de comunicacion co la base de datos', status:false})
+        res.end()
+    }
 })
 
-router.get('/:wallet', async (req, res) => {
-    const wallet = req.params.wallet
-    const response = await User.findOne({ wallet })
-    res.json(response)
-})
-
+//registro de usuarios
 router.post('/', async (req, res) => {
     const user = req.body
     const userToRegister = {
@@ -29,28 +33,95 @@ router.post('/', async (req, res) => {
     }
 })
 
+//login de usuarios
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body
 
-    const userFinded = await User.findOne({ email })
-    if (!userFinded) {
-        res.json({ message: "Usuarion no registrado", status: false })
-    }
+    try {
+        const { email, password } = req.body
 
-    const response = await User.findOne({ email, password })
-    console.log(response)
-    if (response) {
-        const body = {
-            name: response.name,
-            email: response.email,
-            phone: response.phone,
-            level: response.level
+        if (!email || !password) {
+            res.json({ status: false, body: {}, message: 'Se espera un correo y una contraseña' })
         }
-        res.json({ message: "success", status: true, body })
-    } else {
-        res.json({ message: "Contraseña Incorrecta", status: false })
+        const userFinded = await User.findOne({ email })
+        if (!userFinded) {
+            return res.json({ message: "Usuarion no registrado", status: false })
+        }
+
+        const response = await User.findOne({ email, password })
+        console.log(response)
+        if (response) {
+            const body = {
+                name: response.name,
+                email: response.email,
+                phone: response.phone,
+                level: response.level
+            }
+            res.json({ message: "success", status: true, body })
+        } else {
+            res.json({ message: "Contraseña Incorrecta", status: false })
+        }
+    } catch (error) {
+        console.log(error)
+        res.end(error)
     }
 })
+
+//hacer admin un usuario
+router.put('/:id/:password/:adminLevel', async (req, res) => {
+    const { id, password, adminLevel } = req.params
+    console.log(req.params)
+    try {
+
+        if (password !== adminPassword) {
+            res.json({ message: "Contraseña Incorrecta", status: false })
+            res.end()
+            return
+        }
+
+        const response = await User.findOneAndUpdate({ _id: id }, { level: adminLevel }, { new: true })
+        if (response) {
+            res.json({ message: 'success', status: true })
+            res.end()
+            return
+        } else {
+            res.json({ message: 'No se a podido establecer la comunicacion con la base de datos', status: false })
+            res.end()
+            return
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({ message: 'A ocurrido un error por favor intentar nuevamente', status: false })
+        res.end()
+        return
+    }
+
+})
+
+//eliminar usuarios
+router.delete('/:id/:password', async (req, res) => {
+    try {
+        const { id, password } = req.params
+        if (password !== adminPassword) {
+            res.json({ message: "Contraseña Incorrecta", status: false })
+            res.end()
+            return
+        }
+
+        const usuarioEliminado = await User.findByIdAndDelete(id)
+        if (usuarioEliminado) {
+            res.json({ message: 'Usuario eliminado', status: true })
+            res.end()
+        } else {
+            res.json({ message: 'No se pudo eliminar el usuario', status: false })
+            res.end()
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({ message: 'A ocurrido un error, volver a intentar mas tarde', status: false })
+    }
+})
+
+
 
 
 module.exports = router;
