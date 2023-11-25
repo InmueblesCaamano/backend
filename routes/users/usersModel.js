@@ -24,6 +24,11 @@ const User = new Schema({
         type:Number,
         require:true,
         default:0
+    },
+    token:{
+        type:String,
+        require:false,
+        default:""
     }
 })
 

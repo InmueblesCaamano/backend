@@ -1,17 +1,19 @@
-const express = require('express');
-const router = express.Router();
+const express = require('express')
+const router = express.Router()
 const User = require('./usersModel')
+const generateToken = require('../../services/tokenGenerator')
 
-const adminPassword = '123'
+const adminPassword = process.env.NODE_ENV_ADMIN_PASS
+
 
 //listar usuarios
 router.get('/', async (req, res) => {
     try {
         const response = await User.find()
-        res.json({message:'success', status:true, body:response})
+        res.json({ message: 'success', status: true, body: response })
         res.end()
     } catch (error) {
-        res.json({message:'Ocurrio un error de comunicacion co la base de datos', status:false})
+        res.json({ message: 'Ocurrio un error de comunicacion co la base de datos', status: false })
         res.end()
     }
 })
@@ -25,6 +27,7 @@ router.post('/', async (req, res) => {
         phone: user.phone,
         password: user.password
     }
+
     const response = await User(userToRegister).save()
     if (response) {
         res.json({ message: "success", status: true, body: response })
@@ -48,15 +51,29 @@ router.post('/login', async (req, res) => {
         }
 
         const response = await User.findOne({ email, password })
-        console.log(response)
         if (response) {
-            const body = {
-                name: response.name,
-                email: response.email,
-                phone: response.phone,
-                level: response.level
+            let token = generateToken()
+            let body = {}
+
+            if (response.level === 999) {
+                await User.findOneAndUpdate({ email }, { token })
+                body = {
+                    name: response.name,
+                    email: response.email,
+                    phone: response.phone,
+                    level: response.level,
+                    token
+                }
+            } else {
+                body = {
+                    name: response.name,
+                    email: response.email,
+                    phone: response.phone,
+                    level: response.level
+                }
             }
             res.json({ message: "success", status: true, body })
+
         } else {
             res.json({ message: "Contraseña Incorrecta", status: false })
         }
@@ -67,13 +84,14 @@ router.post('/login', async (req, res) => {
 })
 
 //hacer admin un usuario
-router.put('/:id/:password/:adminLevel', async (req, res) => {
-    const { id, password, adminLevel } = req.params
-    console.log(req.params)
-    try {
+router.put('/:id/:token/:adminLevel', async (req, res) => {
+    const { id, token, adminLevel } = req.params
 
-        if (password !== adminPassword) {
-            res.json({ message: "Contraseña Incorrecta", status: false })
+    try {
+        
+        const user = await User.findOne({ token })
+        if (!user) {
+            res.json({ message: "Usuario no autorizado", status: false })
             res.end()
             return
         }
@@ -120,8 +138,5 @@ router.delete('/:id/:password', async (req, res) => {
         res.json({ message: 'A ocurrido un error, volver a intentar mas tarde', status: false })
     }
 })
-
-
-
 
 module.exports = router;
