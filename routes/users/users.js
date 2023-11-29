@@ -5,7 +5,6 @@ const generateToken = require('../../services/tokenGenerator')
 
 const adminPassword = process.env.NODE_ENV_ADMIN_PASS
 
-
 //listar usuarios
 router.get('/', async (req, res) => {
     try {
@@ -52,7 +51,7 @@ router.post('/login', async (req, res) => {
 
         const response = await User.findOne({ email, password })
         if (response) {
-            let token = generateToken()
+            let token = generateToken(40)
             let body = {}
 
             if (response.level === 999) {
@@ -62,7 +61,8 @@ router.post('/login', async (req, res) => {
                     email: response.email,
                     phone: response.phone,
                     level: response.level,
-                    token
+                    token,
+                    _id: response._id
                 }
             } else {
                 body = {
