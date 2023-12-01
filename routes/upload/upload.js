@@ -6,7 +6,7 @@ const Buildings = require('../buildings/buildingsModel')
 const tokenGenerator = require('../../services/tokenGenerator')
 
 const storage = multer.diskStorage({
-    destination: '../caamanoApp/public/files/', // Carpeta donde se guardarán los archivos
+    destination: './files/', // Carpeta donde se guardarán los archivos
     filename: (req, file, cb) => {
         const randomChain = tokenGenerator(5)
         cb(null, file.fieldname + '-' + randomChain + Date.now() + path.extname(file.originalname));
