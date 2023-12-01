@@ -15,7 +15,8 @@ const Buildings = require('../buildings/buildingsModel')
 
 // const upload = multer({ storage })
 
-router.post('/:id',upload.array('image',6), async (req, res) => {
+// router.post('/:id',upload.array('image',6), async (req, res) => {
+router.post('/:id', async (req, res) => {
     // const files = req.files
     // const _id = req.params.id
     // const respuesta = await Buildings.findOneAndUpdate({_id},{images:files})
