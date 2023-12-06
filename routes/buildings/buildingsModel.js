@@ -17,6 +17,9 @@ const Buildings = new Schema({
   idPublicante: { type: String, default: "", required: true },
   date: { type: Date, default: Date.now, required: false },
   images: { type: Array, default: [], required: false },
+  tel: { type: String, default: '', required: false },
+  ws: { type: String, default: '', required: false },
+  publish: { type: Boolean, default: true },
 })
 
 module.exports = mongoose.model('Buildings', Buildings);
