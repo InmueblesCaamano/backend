@@ -2,13 +2,14 @@ const express = require('express')
 const router = express.Router()
 const Buildings = require('./buildingsModel')
 
+//obtener todos los inmuebles
 router.get('/', async (req, res) => {
     const response = await Buildings.find()
     res.json({ message: "success", status: true, body: response })
 })
 
+//obtener 1 inmueble
 router.get('/:id', (req, res) => {
-    //obtener 1 inmueble
     const id = req.params.id
     Buildings.findById(id).then(response => {
         res.json({ message: "success", status: true, body: response })
@@ -18,10 +19,9 @@ router.get('/:id', (req, res) => {
 
 })
 
+//publicar un inmuebles
 router.post('/', async (req, res) => {
-
     try {
-
         const body = {
             municipios: req.body.municipios,
             parroquias: req.body.parroquias,
@@ -46,28 +46,41 @@ router.post('/', async (req, res) => {
     } catch (error) {
         res.json({ message: "Error en la base de datos", status: false, body: {} })
     }
-
-
-    /* try {
-        if (response) {
-            res.json({ message: "success", status: true, body: response })
-        
-        } else {
-            res.json({ message: "Error al registrar", status: false, body: {} })
-            
-        }
-
-    } catch (error) {
-        res.json({ message: "Error de comunicacion con de base de datos ", status: false, body: {} })
-    } */
 })
 
 //editar un inmuebles
-router.put('/', (req, res) => {
-    res.json({ message: "success", status: true, body: {} })
+router.put('/:id', async (req, res) => {
+    const id = req.params.id
+    const data = req.body
+    console.log(data)
+    const modifyData = {
+        tipo: data.tipo,
+        descripcion: data.descripcion,
+        precio: data.precio,
+        parroquias: data.parroquias,
+        descripcion: data.descripcion,
+        cantidadCuartos: data.cantidadCuartos,
+        ventaOAlquiler: data.ventaOAlquiler,
+        cantidadBanos: data.cantidadBanos,
+        cantidadEstacionamientos: data.cantidadEstacionamientos,
+        metrosTerreno: data.metrosTerreno,
+        metrosConstruccion: data.metrosConstruccion,
+        tel: data.tel,
+        ws: data.ws
+    }
+    try {
+        const response = await Buildings.findOneAndUpdate({ _id: id }, modifyData)
+        if (response) {
+            res.json({ message: "success", status: true, response })
+        } else {
+            res.json({ message: "Propiedad no encontrada", status: false })
+        }
+    } catch (error) {
+        res.json({ message: "Error", status: false })
+    }
 })
 
-//publicar un inmuebles
+//hacer visible un inmueble
 router.put('/publish/:id', async (req, res) => {
     const id = req.params.id
     try {
@@ -101,7 +114,7 @@ router.delete('/deleteone/:id/:index', async (req, res) => {
     const building = await Buildings.findOne({ _id: id })
     const images = building.images
     const newImages = images.filter((image, i) => index != i && image)
-    console.log(images,' =====')
+    console.log(images, ' =====')
     console.log(newImages)
     const response = await Buildings.findOneAndUpdate({ _id: req.params.id }, { images: newImages })
     if (response) {
